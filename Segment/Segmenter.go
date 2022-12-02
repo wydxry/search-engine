@@ -5,25 +5,27 @@ import (
 	"github.com/yanyiwu/gojieba"
 )
 
-func Segmenter(sentences [][]string) [][]string {
+type Segmenter struct {
+}
+
+func (segmenter *Segmenter) Segmenter(sentences [][]string) [][]string {
 	var seg = gojieba.NewJieba()
 	defer seg.Free()
 	//var useHmm = true
 
 	var resWords []string
 	ret := [][]string{}
-	//var sentence = "万里长城万里长"
+	//var sentence = "计算机视觉"
 
 	for i := 0; i < len(sentences); i++ {
 		resWords = seg.CutAll(sentences[i][1])
-		//resWords = seg.Cut(sentences[i][1], useHmm)
 		ret = append(ret, resWords)
 	}
 
 	return ret
 }
 
-func QuerySegmenter(querys string) []string {
+func (segmenter *Segmenter) QuerySegmenter(querys string) []string {
 	var seg = gojieba.NewJieba()
 	defer seg.Free()
 	//var useHmm = true
@@ -37,5 +39,5 @@ func QuerySegmenter(querys string) []string {
 }
 
 //func main() {
-//	QuerySegmenter("清华大学")
+//	QuerySegmenter("中国足球")
 //}

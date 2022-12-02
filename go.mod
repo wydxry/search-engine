@@ -3,12 +3,13 @@ module mySearch
 go 1.18
 
 require (
-	github.com/360EntSecGroup-Skylar/excelize v1.4.1
-	github.com/huichen/wukong v0.0.0-20210824074240-ecbd39fa0b56
+	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
+	github.com/huichen/wukong v0.0.0-20210824074240-ecbd39fa0b56 // indirect
 	github.com/yanyiwu/gojieba v1.1.2
 )
 
 require (
+	github.com/Chain-Zhang/pinyin v0.1.3
 	github.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cznic/fileutil v0.0.0-20181122101858-4d67cfea8c87 // indirect

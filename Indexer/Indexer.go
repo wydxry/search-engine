@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-type BM25 struct {
+type Indexer struct {
 	Docs          [][]string
 	WordsMap      []string
 	wordSplitArr  [][]string
@@ -20,51 +20,51 @@ type BM25 struct {
 	avgWordNum    float64
 }
 
-func getMap(bm25 *BM25, arrTmp [][]string) {
+func (indexer *Indexer) getMap(arrTmp [][]string) {
 	for _, value := range arrTmp {
 		//arrTmp := strings.Split(v, "|")
-		bm25.wordSplitArr = append(bm25.wordSplitArr, value)
-		bm25.words = append(bm25.words, value...)
-		bm25.totalNumWords += len(arrTmp)
+		indexer.wordSplitArr = append(indexer.wordSplitArr, value)
+		indexer.words = append(indexer.words, value...)
+		indexer.totalNumWords += len(arrTmp)
 	}
 
 	//去用map重
 	tmpMap := make(map[string]int)
-	for _, value := range bm25.words {
+	for _, value := range indexer.words {
 		tmpMap[value] = tmpMap[value] + 1
 	}
-	bm25.WordsMap = []string{}
+	indexer.WordsMap = []string{}
 	for key, _ := range tmpMap {
-		bm25.WordsMap = append(bm25.WordsMap, key)
+		indexer.WordsMap = append(indexer.WordsMap, key)
 	}
 }
 
-func getFrequency(bm25 *BM25) {
+func (indexer *Indexer) getFrequency() {
 
 	//切分后的word数量
-	docNum := len(bm25.wordSplitArr)
-	wordNum := len(bm25.WordsMap)
+	docNum := len(indexer.wordSplitArr)
+	wordNum := len(indexer.WordsMap)
 	//初始化
-	bm25.frequency = make([][]float64, wordNum)
-	for i := 0; i < len(bm25.frequency); i++ {
-		bm25.frequency[i] = make([]float64, docNum)
+	indexer.frequency = make([][]float64, wordNum)
+	for i := 0; i < len(indexer.frequency); i++ {
+		indexer.frequency[i] = make([]float64, docNum)
 	}
 
 	idx := 0
 	//出现该分词词的文档数目
-	bm25.happenWord = make([]float64, wordNum)
+	indexer.happenWord = make([]float64, wordNum)
 	//计算第i个word出现在第j个文档的词频
-	for _, word := range bm25.WordsMap {
-		for j, arr := range bm25.wordSplitArr { //wordSplitArr[i]存储着第i个句子分词后的结果
+	for _, word := range indexer.WordsMap {
+		for j, arr := range indexer.wordSplitArr { //wordSplitArr[i]存储着第i个句子分词后的结果
 			isWriteHappenWord := false
 			for _, splitWord := range arr {
 				if word == splitWord {
 					if !isWriteHappenWord {
 						isWriteHappenWord = true
-						bm25.happenWord[idx]++
+						indexer.happenWord[idx]++
 					}
 					//第i个word出现在第j个文档的词频
-					bm25.frequency[idx][j]++
+					indexer.frequency[idx][j]++
 				}
 			}
 		}
@@ -72,52 +72,51 @@ func getFrequency(bm25 *BM25) {
 	}
 }
 
-func getIDF(bm25 *BM25) {
+func (indexer *Indexer) getIDF() {
 	//切分后的word数量
-	wordNum := len(bm25.WordsMap)
-	docNum := float64(len(bm25.wordSplitArr))
-	bm25.idf = make([]float64, wordNum)
+	wordNum := len(indexer.WordsMap)
+	docNum := float64(len(indexer.wordSplitArr))
+	indexer.idf = make([]float64, wordNum)
 	for i := 0; i < wordNum; i++ {
-		if bm25.happenWord[i] == 0 {
-			bm25.idf[i] = 0
+		if indexer.happenWord[i] == 0 {
+			indexer.idf[i] = 0
 		} else {
-			bm25.idf[i] = math.Log2((docNum / bm25.happenWord[i]) + 1.0)
+			indexer.idf[i] = math.Log2((docNum / indexer.happenWord[i]) + 1.0)
 		}
 
 	}
 }
 
-func InitBM25Param(bm25 *BM25, strs, input [][]string) {
-	//bm25.WordsMap = make(map[string]int)
-	bm25.Docs = input
-	getMap(bm25, strs)
-	getFrequency(bm25)
-	getIDF(bm25)
-	bm25.b = 0.75
-	bm25.k1 = 2.0
-	bm25.avgWordNum = float64(bm25.totalNumWords / len(bm25.wordSplitArr))
-	bm25.Bm25Value = make([][][]float64, len(bm25.WordsMap))
-	for i := 0; i < len(bm25.Bm25Value); i++ {
-		bm25.Bm25Value[i] = make([][]float64, len(bm25.wordSplitArr))
-		for j := 0; j < len(bm25.wordSplitArr); j++ {
-			bm25.Bm25Value[i][j] = make([]float64, 3)
+func (indexer *Indexer) InitBM25Param(strs, input [][]string) {
+	//indexer.WordsMap = make(map[string]int)
+	indexer.Docs = input
+	indexer.getMap(strs)
+	indexer.getFrequency()
+	indexer.getIDF()
+	indexer.b = 0.75
+	indexer.k1 = 2.0
+	indexer.avgWordNum = float64(indexer.totalNumWords / len(indexer.wordSplitArr))
+	indexer.Bm25Value = make([][][]float64, len(indexer.WordsMap))
+	for i := 0; i < len(indexer.Bm25Value); i++ {
+		indexer.Bm25Value[i] = make([][]float64, len(indexer.wordSplitArr))
+		for j := 0; j < len(indexer.wordSplitArr); j++ {
+			indexer.Bm25Value[i][j] = make([]float64, 3)
 		}
 	}
 }
 
-func CalcBM25(bm25 *BM25, strs, input [][]string) {
-	InitBM25Param(bm25, strs, input)
-	wordNum := len(bm25.WordsMap)
-	docNum := len(bm25.wordSplitArr)
+func (indexer *Indexer) CalcBM25(strs, input [][]string) {
+	indexer.InitBM25Param(strs, input)
+	wordNum := len(indexer.WordsMap)
+	docNum := len(indexer.wordSplitArr)
 	for i := 0; i < wordNum; i++ {
 		for j := 0; j < docNum; j++ {
-			bm25.Bm25Value[i][j][0] = float64(i)
-			bm25.Bm25Value[i][j][1] = float64(j)
-			bm25.Bm25Value[i][j][2] = (bm25.idf[i] * bm25.frequency[i][j] * (bm25.k1 + 1)) /
-				(bm25.frequency[i][j] + bm25.k1*(1-bm25.b+(bm25.b*float64(len(bm25.wordSplitArr[j]))/bm25.avgWordNum)))
+			indexer.Bm25Value[i][j][0] = float64(i)
+			indexer.Bm25Value[i][j][1] = float64(j)
+			indexer.Bm25Value[i][j][2] = (indexer.idf[i] * indexer.frequency[i][j] * (indexer.k1 + 1)) /
+				(indexer.frequency[i][j] + indexer.k1*(1-indexer.b+(indexer.b*float64(len(indexer.wordSplitArr[j]))/indexer.avgWordNum)))
 		}
 	}
-	//计算完把doc按Bm25Value进行排序
 
 }
 

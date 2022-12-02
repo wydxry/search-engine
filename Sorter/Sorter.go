@@ -5,6 +5,9 @@ import (
 	"sort"
 )
 
+type Sorter struct {
+}
+
 type Obj struct {
 	idAndScoreArr [][]float64
 }
@@ -21,7 +24,7 @@ func (obj Obj) Swap(i, j int) {
 	obj.idAndScoreArr[i], obj.idAndScoreArr[j] = obj.idAndScoreArr[j], obj.idAndScoreArr[i]
 }
 
-func Sorter(idAndScoreArr [][]float64) [][]float64 {
+func (s *Sorter) Sorter(idAndScoreArr [][]float64) [][]float64 {
 	obj := &Obj{
 		idAndScoreArr: idAndScoreArr,
 	}
